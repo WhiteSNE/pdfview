@@ -17,11 +17,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "server",
-      "favicon": "./assets/images/favicon.png"
+      "permissions": [],
+      "predictiveBackGestureEnabled": false,
+      "package": "com.hernanda.pdfview"
     },
     "plugins": [
       "expo-router",
@@ -32,11 +30,24 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "react-native-blob-util",
+      "@config-plugins/react-native-pdf"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "139df145-e2f4-42a1-84a5-c6323c12fe28"
+      }
+    },
+    "owner": "hernanda"
   }
 }
