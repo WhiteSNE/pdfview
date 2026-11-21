@@ -1,0 +1,20 @@
+# Release notes — PDFView Reader (early build)
+
+Version: 1.0.0-reader
+Branch: `reader-only`
+
+## What's in this build
+- Open PDF files from the device and view them.
+- Recent documents list with long-press multi-select and removal.
+- Page navigation (previous / next) and "Go to page".
+- Print the open document via the system print dialog.
+- Dark / light theme following the device setting.
+- On first launch, pick a folder where PDFView keeps a stable copy of opened PDFs (Android).
+
+## Not included (available in the Complete edition)
+- Cut pages / merge documents.
+- Find-in-document text search with match navigation.
+
+## Notes
+- This is an early build for evaluation. This is a development client; it requires a development build (`npx expo run:android --device`) and will not run in Expo Go.
+- All processing is local on the device — no account, no server.

@@ -6,16 +6,14 @@ import {
   RecentDocument,
   removeRecentDocuments,
 } from "@/utils/directories";
-import { Href, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   Alert,
-  Animated,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -23,17 +21,10 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-const actions = [
-  { label: "Cut Document", href: "/screens/cut-document" },
-  { label: "Merge Document", href: "/screens/merge-document" },
-] as const satisfies readonly { label: string; href: Href }[];
-
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(false);
-  const [anim] = useState(() => new Animated.Value(0));
   const [documents, setDocuments] = useState<RecentDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUris, setSelectedUris] = useState<string[]>([]);
@@ -49,25 +40,6 @@ export default function HomeScreen() {
       void loadDocuments();
     }, [loadDocuments]),
   );
-
-  const toggle = () => {
-    Animated.timing(anim, {
-      toValue: expanded ? 0 : 1,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-    setExpanded(!expanded);
-  };
-
-  const handleAction = (href: Href) => {
-    setExpanded(false);
-    Animated.timing(anim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-    router.push(href);
-  };
 
   const openDocument = async () => {
     const result = await pickAndSavePdf();
@@ -199,8 +171,7 @@ export default function HomeScreen() {
                       { color: theme.textSecondary },
                     ]}
                   >
-                    {item.source === "opened" ? "Opened" : "Created"} ·{" "}
-                    {new Date(item.openedAt).toLocaleDateString()}
+                    Opened · {new Date(item.openedAt).toLocaleDateString()}
                   </Text>
                 </View>
                 {selectionMode && (
@@ -226,48 +197,8 @@ export default function HomeScreen() {
         />
 
         <View style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}>
-          <NewButton label={expanded ? "+" : "+"} onPress={toggle} />
+          <NewButton label="+" onPress={() => void openDocument()} />
         </View>
-        <Animated.View
-          style={[
-            styles.accordion,
-            {
-              backgroundColor: theme.backgroundElement,
-              borderColor: theme.border,
-              bottom: insets.bottom + 100,
-              opacity: anim,
-              transform: [
-                {
-                  translateY: anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [10, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-          pointerEvents={expanded ? "auto" : "none"}
-        >
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => void openDocument()}
-          >
-            <Text style={[styles.optionText, { color: theme.text }]}>
-              Open Document
-            </Text>
-          </TouchableOpacity>
-          {actions.map(({ label, href }) => (
-            <TouchableOpacity
-              key={href}
-              style={styles.option}
-              onPress={() => handleAction(href)}
-            >
-              <Text style={[styles.optionText, { color: theme.text }]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -313,28 +244,9 @@ const styles = StyleSheet.create({
     width: 20,
   },
   selectionIndicatorFill: { borderRadius: 5, height: 10, width: 10 },
-  accordion: {
-    position: "absolute",
-    right: 30,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
-    padding: 8,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
   fabContainer: {
     position: "absolute",
     bottom: 30,
     right: 30,
-  },
-  option: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  optionText: {
-    fontSize: 16,
   },
 });

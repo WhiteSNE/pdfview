@@ -1,11 +1,9 @@
 import { useTheme } from "@/hooks/use-theme";
-import { searchPdf, type SearchResult } from "@/utils/search";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Print from "expo-print";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Easing,
   Modal,
@@ -29,11 +27,6 @@ export default function PdfViewerScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [gotoOpen, setGotoOpen] = useState(false);
   const [pageInput, setPageInput] = useState("");
-  const [findOpen, setFindOpen] = useState(false);
-  const [findQuery, setFindQuery] = useState("");
-  const [findResult, setFindResult] = useState<SearchResult | null>(null);
-  const [finding, setFinding] = useState(false);
-  const [currentHit, setCurrentHit] = useState(0);
   const pdf = useRef<PdfRef>(null);
   const [titleWidth, setTitleWidth] = useState(0);
   const [titleClipWidth, setTitleClipWidth] = useState(0);
@@ -48,40 +41,6 @@ export default function PdfViewerScreen() {
       setGotoOpen(false);
       setPageInput("");
     }
-  };
-
-  const runFind = async () => {
-    if (!findQuery.trim() || finding || !uri) return;
-    setFinding(true);
-    try {
-      const result = await searchPdf(uri, findQuery);
-      setFindResult(result);
-      setCurrentHit(result.hits.length ? 0 : -1);
-      if (result.hits.length) {
-        pdf.current?.setPage(result.hits[0].page);
-      }
-    } catch (error) {
-      Alert.alert(
-        "Find failed",
-        error instanceof Error ? error.message : "Could not search this PDF.",
-      );
-    } finally {
-      setFinding(false);
-    }
-  };
-
-  const showHit = (next: number) => {
-    const hits = findResult?.hits ?? [];
-    if (!hits.length) return;
-    const wrapped = (next + hits.length) % hits.length;
-    setCurrentHit(wrapped);
-    pdf.current?.setPage(hits[wrapped].page);
-  };
-
-  const closeFind = () => {
-    setFindOpen(false);
-    setFindResult(null);
-    setCurrentHit(0);
   };
 
   useEffect(() => {
@@ -155,55 +114,6 @@ export default function PdfViewerScreen() {
           </Animated.Text>
         </View>
       </View>
-      {findOpen && (
-        <View style={[styles.findBar, { borderColor: theme.border }]}>
-          <TextInput
-            autoFocus
-            onChangeText={setFindQuery}
-            onSubmitEditing={() => void runFind()}
-            placeholder="Find in document"
-            placeholderTextColor={theme.textSecondary}
-            returnKeyType="search"
-            style={[styles.findInput, { borderColor: theme.border, color: theme.text }]}
-            value={findQuery}
-          />
-          <Text style={[styles.findCount, { color: theme.textSecondary }]}>
-            {finding
-              ? "…"
-              : findResult
-                ? findResult.total
-                  ? `${currentHit + 1} / ${findResult.total}`
-                  : "0 / 0"
-                : ""}
-          </Text>
-          <Pressable
-            disabled={!findResult?.hits.length}
-            hitSlop={8}
-            onPress={() => showHit(currentHit - 1)}
-            style={styles.findNav}
-          >
-            <Text style={[styles.findNavText, { color: theme.accent }]}>‹</Text>
-          </Pressable>
-          <Pressable
-            disabled={!findResult?.hits.length}
-            hitSlop={8}
-            onPress={() => showHit(currentHit + 1)}
-            style={styles.findNav}
-          >
-            <Text style={[styles.findNavText, { color: theme.accent }]}>›</Text>
-          </Pressable>
-          <Pressable hitSlop={8} onPress={closeFind} style={styles.findNav}>
-            <Text style={[styles.findClose, { color: theme.textSecondary }]}>✕</Text>
-          </Pressable>
-        </View>
-      )}
-      {findResult && findResult.hits.length > 0 && currentHit >= 0 && (
-        <View style={[styles.findSnippet, { borderColor: theme.border }]}>
-          <Text numberOfLines={2} style={[styles.findSnippetText, { color: theme.textSecondary }]}>
-            Page {findResult.hits[currentHit].page} · {findResult.hits[currentHit].snippet}
-          </Text>
-        </View>
-      )}
       {pageCount > 0 && (
         <View style={[styles.pageBar, { borderColor: theme.border }]}>
           <Pressable disabled={page === 1} onPress={() => goToPage(page - 1)}>
@@ -247,15 +157,6 @@ export default function PdfViewerScreen() {
             </Pressable>
             <Pressable style={styles.menuItem} onPress={() => void Print.printAsync({ uri })}>
               <Text style={{ color: theme.text }}>Print</Text>
-            </Pressable>
-            <Pressable
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuOpen(false);
-                setFindOpen(true);
-              }}
-            >
-              <Text style={{ color: theme.text }}>Find</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -312,14 +213,6 @@ const styles = StyleSheet.create({
   dialogActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 16 },
   dialogButton: { paddingHorizontal: 14, paddingVertical: 10 },
   goText: { fontWeight: "700" },
-  findBar: { alignItems: "center", borderBottomWidth: StyleSheet.hairlineWidth, flexDirection: "row", gap: 6, paddingHorizontal: 12, paddingVertical: 6 },
-  findInput: { borderRadius: 6, borderWidth: StyleSheet.hairlineWidth, flex: 1, fontSize: 15, paddingHorizontal: 10, paddingVertical: 6 },
-  findCount: { fontVariant: ["tabular-nums"], fontSize: 13, minWidth: 48, textAlign: "center" },
-  findNav: { paddingHorizontal: 6 },
-  findNavText: { fontSize: 26, lineHeight: 26 },
-  findClose: { fontSize: 16 },
-  findSnippet: { borderBottomWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingVertical: 8 },
-  findSnippetText: { fontSize: 13 },
   fab: { alignItems: "center", borderRadius: 32, elevation: 6, height: 64, justifyContent: "center", position: "absolute", right: 24, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 4, width: 64 },
   fabText: { fontSize: 30, lineHeight: 30 },
   pdf: { flex: 1, width: "100%" },
