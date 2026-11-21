@@ -9,7 +9,7 @@ Branch: `reader-only`
 - Page navigation (previous / next) and "Go to page".
 - Print the open document via the system print dialog.
 - Dark / light theme following the device setting.
-- On first launch, pick a folder where PDFView keeps a stable copy of opened PDFs (Android).
+- No setup screen — open a PDF straight away. Opened files are copied into app storage so recents keep working.
 
 ## Not included (available in the Complete edition)
 - Cut pages / merge documents.
@@ -18,3 +18,5 @@ Branch: `reader-only`
 ## Notes
 - This is an early build for evaluation. This is a development client; it requires a development build (`npx expo run:android --device`) and will not run in Expo Go.
 - All processing is local on the device — no account, no server.
+- Each release includes a `.sha256` checksum file. Verify your download with `sha256sum -c pdfview-reader-1.0.0-debug.apk.sha256`.
+- Full usage instructions are in the [User Guide](docs/USER_GUIDE.md).

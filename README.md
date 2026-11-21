@@ -11,6 +11,10 @@ This is the **Reader** edition (branch `reader-only`). It intentionally has no e
 - Print via the system print dialog.
 - Device dark/light theme.
 
+## Documentation
+- **[User Guide](docs/USER_GUIDE.md)** — full, step-by-step instructions for every feature.
+- [Release notes](RELEASE_NOTES.md) — what is in this early build.
+
 ## Get started
 
 This app uses native modules, so it needs a development build (it will not run in Expo Go):
@@ -26,19 +30,19 @@ To start the dev server separately:
 npx expo start
 ```
 
-On first launch on Android, choose a folder where PDFView keeps a stable copy of opened PDFs. The choice is remembered.
+There is no setup screen — tap **+** on the Home screen to open your first PDF.
 
 ## Checks
 
 ```bash
-npx tsc --noEmit   # types
-npx expo lint      # lint
-npm test           # unit tests
+npx tsc --noEmit            # types
+npx expo lint --no-cache    # lint
+npm test                    # unit tests
 ```
 
 ## Early build packages
 
-Prebuilt development APKs are attached to the [GitHub Releases](https://github.com/WhiteSNE/pdfview/releases) tagged `reader-*`.
+Prebuilt development APKs are attached to the [GitHub Releases](https://github.com/WhiteSNE/pdfview/releases) tagged `reader-*`. Each release includes a `.sha256` checksum file — verify a download with `sha256sum -c <file>.sha256`.
 
 ## Builds
 
