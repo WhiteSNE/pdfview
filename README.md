@@ -45,10 +45,18 @@ npm test                    # unit tests
 
 Prebuilt development APKs are attached to the [GitHub Releases](https://github.com/WhiteSNE/pdfview/releases) tagged `complete-*`. Each release includes a `.sha256` checksum file — verify a download with `sha256sum -c <file>.sha256`.
 
+These are development builds: they include the Expo dev menu and binaries for multiple CPU architectures, so the APK is much larger than what users download from a store.
+
 ## Builds
 
-Use EAS to build and sign:
+Use EAS to build and sign. The `production` profile produces an Android App Bundle (`.aab`) for the Play Store; Google generates a smaller, device-specific APK from it:
 
 ```bash
-npx eas-cli build
+npx eas-cli build --platform android --profile production
+```
+
+For a directly installable APK (internal testing), use the `preview` profile:
+
+```bash
+npx eas-cli build --platform android --profile preview
 ```
