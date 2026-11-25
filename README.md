@@ -8,7 +8,7 @@ This is the **Complete** edition (branch `main`). For a minimal reader without e
 - Open PDF files from your device; recents list with long-press multi-select/removal.
 - **Cut** selected pages into a new PDF.
 - **Merge** multiple PDFs into one.
-- **Find** text inside a document with per-page match counts and next/previous match navigation.
+- **Find** text inside a document with next/previous match navigation.
 - Page navigation, "Go to page", and print via the system print dialog.
 - Device dark/light theme.
 

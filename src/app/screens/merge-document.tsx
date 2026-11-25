@@ -38,7 +38,7 @@ export default function MergeDocumentScreen() {
     setFiles((current) => {
       const next = [...current];
       for (const item of selected) {
-        if (!next.some((f) => f.uri === item.uri)) {
+        if (!next.some((f) => f.name === item.name)) {
           next.push({ name: item.name, uri: item.uri });
         }
       }

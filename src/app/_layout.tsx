@@ -67,11 +67,13 @@ export default function RootLayout() {
     const subscription = AppState.addEventListener("change", (state) => {
       // The picker itself fires "active" on close — let its own result win.
       if (state === "active" && !pickingRef.current) {
-        void checkStorageAccess().then((granted) => {
-          if (active && !pickingRef.current) {
-            setAccessGranted(granted);
-          }
-        });
+        void checkStorageAccess()
+          .then((granted) => {
+            if (active && !pickingRef.current) {
+              setAccessGranted(granted);
+            }
+          })
+          .catch(() => {});
       }
     });
 

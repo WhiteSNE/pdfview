@@ -159,7 +159,11 @@ export default function PdfViewerScreen() {
         <View style={[styles.findBar, { borderColor: theme.border }]}>
           <TextInput
             autoFocus
-            onChangeText={setFindQuery}
+            onChangeText={(text) => {
+              setFindQuery(text);
+              setFindResult(null);
+              setCurrentHit(0);
+            }}
             onSubmitEditing={() => void runFind()}
             placeholder="Find in document"
             placeholderTextColor={theme.textSecondary}

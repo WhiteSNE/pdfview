@@ -75,7 +75,7 @@ When you open a PDF you get:
 Search details:
 - Matching is **case-insensitive** and matches literal text (`cat` finds `Cat` and `CAT`).
 - Each occurrence is counted separately; the same word twice on one page counts as two matches.
-- Works on PDFs that contain real embedded text. Scanned/image-only PDFs have no searchable text and will report **0 / 0** with the message *"No text matches found (scanned PDFs have no searchable text)."*
+- Works on PDFs that contain real embedded text. Scanned/image-only PDFs have no searchable text and will report **0 / 0**.
 - Searching a long PDF extracts text from every page first, which can take a moment; a `…` is shown while it works.
 
 ---

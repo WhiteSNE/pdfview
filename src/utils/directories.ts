@@ -1,6 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import { Directory, File, Paths } from "expo-file-system";
 import { Platform } from "react-native";
+import { safDisplayName } from "./saf-name";
 
 export const APP_DIRECTORIES = {
   output: new Directory(Paths.document, "outputs"),
@@ -8,6 +9,7 @@ export const APP_DIRECTORIES = {
 
 const RECENTS_FILE = new File(Paths.document, "recent-documents.json");
 const OPENED_DOCUMENTS_DIR = new Directory(Paths.document, "opened");
+const GENERATED_DOCUMENTS_DIR = new Directory(Paths.document, "generated");
 const OUTPUT_DIRECTORY_FILE = new File(Paths.document, "output-directory.json");
 const MAX_RECENT_DOCUMENTS = 20;
 const OUTPUT_DIRECTORY_NAME = "PDFView";
@@ -67,12 +69,16 @@ export async function pickOutputDirectory(): Promise<Directory | null> {
     throw error;
   }
 
+  // SAF children put the display name inside the URI, so .name (basename of the
+  // whole doc ID) never matches; read the decoded last segment instead. Reuse an
+  // existing PDFView folder so a re-pick does not nest PDFView/PDFView.
   const outputDirectory =
     baseDirectory
       .list()
       .find(
         (item): item is Directory =>
-          item instanceof Directory && item.name === OUTPUT_DIRECTORY_NAME,
+          item instanceof Directory &&
+          safDisplayName(item.uri) === OUTPUT_DIRECTORY_NAME,
       ) ?? baseDirectory.createDirectory(OUTPUT_DIRECTORY_NAME);
 
   // Some SAF providers hand back a tree URI that cannot be written to. Verify
@@ -104,25 +110,41 @@ export async function writeOutputPdf(
 
   // Keep a typed name inside the chosen folder (no ../ path escapes).
   const safeName = name.replace(/[/\\]/g, "_");
-  const existingFile = directory
-    .list()
-    .find((item): item is File => item instanceof File && item.name === safeName);
+  // SAF cannot find an existing child by name (.name is a document ID), so let
+  // Android create a new file; it auto-suffixes duplicates instead of overwriting.
+  const existingFile = directory.uri.startsWith("content://")
+    ? null
+    : directory
+        .list()
+        .find((item): item is File => item instanceof File && item.name === safeName);
 
-  // Overwrite in place; deleting first would lose the old PDF if the write fails.
-  const output = existingFile ?? directory.createFile(safeName, "application/pdf");
-  await output.write(bytes);
-  return output;
+  // Write to a temp file first so a failed write leaves the existing PDF intact.
+  const temp = directory.createFile(`.${safeName}.${Date.now()}.tmp`, "application/pdf");
+  try {
+    await temp.write(bytes);
+    const output = existingFile ?? directory.createFile(safeName, "application/pdf");
+    await temp.copy(output, { overwrite: true });
+    return output;
+  } finally {
+    temp.delete();
+  }
 }
 
 // react-native-pdf cannot open SAF tree URIs (content://...), so keep a local
 // copy of generated PDFs and store that file:// URI for the viewer/recents.
 export async function saveViewerCopy(name: string, bytes: Uint8Array) {
-  if (!OPENED_DOCUMENTS_DIR.exists) {
-    OPENED_DOCUMENTS_DIR.create({ idempotent: true, intermediates: true });
+  if (!GENERATED_DOCUMENTS_DIR.exists) {
+    GENERATED_DOCUMENTS_DIR.create({ idempotent: true, intermediates: true });
   }
   const safeName = name.replace(/[/\\]/g, "_");
-  const local = new File(OPENED_DOCUMENTS_DIR, safeName);
-  await local.write(bytes);
+  const local = new File(GENERATED_DOCUMENTS_DIR, safeName);
+  const temp = new File(GENERATED_DOCUMENTS_DIR, `.${safeName}.${Date.now()}.tmp`);
+  try {
+    await temp.write(bytes);
+    await temp.copy(local, { overwrite: true });
+  } finally {
+    temp.delete();
+  }
   return local.uri;
 }
 
@@ -172,10 +194,8 @@ function withRecentsLock<T>(work: () => Promise<T>): Promise<T> {
 async function writeRecents(documents: RecentDocument[]) {
   const temp = new File(Paths.document, "recent-documents.tmp");
   await temp.write(JSON.stringify(documents));
-  if (RECENTS_FILE.exists) {
-    RECENTS_FILE.delete();
-  }
-  temp.rename("recent-documents.json");
+  await temp.copy(RECENTS_FILE, { overwrite: true });
+  temp.delete();
 }
 
 export function saveRecentDocument(
@@ -213,7 +233,7 @@ export async function pickAndSavePdf() {
     OPENED_DOCUMENTS_DIR.create({ idempotent: true, intermediates: true });
   }
   // Cache files can be evicted, so keep a stable copy in app-owned storage.
-  const saved = new File(OPENED_DOCUMENTS_DIR, document.name);
+  const saved = new File(OPENED_DOCUMENTS_DIR, document.name.replace(/[/\\]/g, "_"));
   await new File(document.uri).copy(saved, { overwrite: true });
   await saveRecentDocument({
     name: document.name,
