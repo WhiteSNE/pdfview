@@ -21,7 +21,7 @@ Last updated: 2026-11-26. This is a note-to-self for resuming later.
 
 ## Remaining open items
 
-1. **Build and sign with EAS** — no local release keystore and no EAS credentials in this environment. Run `npx eas-cli build --platform android --profile production` while logged in. Google Play generated APKs are typically ~35-50 MB per device; the universal debug APK (~130 MB) is not the store download size.
+1. **Production build is done and signed.** EAS build `bd4c62f1-cd99-4439-85a6-4207398f7c9a` produced `releases/pdfview-production-1.0.0.aab` (50.7 MB, sha256 alongside). Artifact URL: https://expo.dev/artifacts/eas/ZBSBVwG58SSh209DceidBqxBub3cf5qPEZ6ZQKXR5vA.aab . Only arm64-v8a + armeabi-v7a are bundled. Estimated Play download per device: ~58 MiB arm64 / ~50 MiB armv7 uncompressed (before Play compression), vs the old universal debug APK at 130 MB. First build failed on R8 missing `com.gemalto.jp2.JP2Decoder`; fixed with `-dontwarn com.gemalto.jp2.**` in app.json (commit `2993e9e`). Note: `eas build:download` downloads the raw AAB but fails to extract it (CLI expects a tar wrapper) — the file itself is valid.
 2. **Find has no on-page yellow highlights** — by decision, navigation is via counter + snippet + page jump. True highlights need a native bounding-box module + overlay.
 3. **Password-protected PDFs** have limited handling; not deeply tested.
 4. `gh` CLI is not installed; GitHub Releases were managed via the REST API using the token in git credentials.
